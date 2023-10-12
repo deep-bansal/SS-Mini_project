@@ -38,15 +38,23 @@
 #define ADMIN_UPDATE_FACULTY_EMAIL "Enter updated email of faculty"
 #define ADMIN_UPDATE_FACULTY_DESIG "Enter updated designation of faculty"
 
+//faculty part
+
+#define FACULTY_MENU "1. View Offering Courses\n2. Add New Course\n3. Remove Course\n4. Update Course Details\n5. Change Password\nPress any other key to logout"
+
+#define FACULTY_ADD_COURSE_NAME "What is the course's name?"
+#define FACULTY_ADD_COURSE_DEPT "What is the course's department?"
+#define FACULTY_ADD_COURSE_TOTAL_SEATS "What is the total number of seats in course?"
+#define FACULTY_ADD_COURSE_CREDITS "How many credits are for this course?"
 
 #define ERRON_INPUT_FOR_NUMBER "It seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
 #define AUTOGEN_PASSWORD "academia" 
 
 
 
-#define STUDENT_FILE "./functionalities/records/student.txt"
-#define FACULTY_FILE "./functionalities/records/faculty.txt"
-// #define TRANSACTION_FILE "./records/transactions.txt"
+#define STUDENT_FILE "./functionalities/records/student"
+#define FACULTY_FILE "./functionalities/records/faculty"
+#define COURSE_FILE "./functionalities/records/course"
 
 
 #endif

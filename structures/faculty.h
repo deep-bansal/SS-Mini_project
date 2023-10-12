@@ -8,6 +8,7 @@ struct Faculty{
     int login_id;
     char password[10];
     char email[30];
+
 };
 
 #endif

@@ -2,12 +2,6 @@
 #define ADMIN_FUNCTIONS
 
 #include "./basic.h"
-
-#include <crypt.h>
-
-// activate Student
-// block student
-
 bool admin_operation_handler(int connFD);
 
 int add_student(int connFD);
@@ -91,6 +85,8 @@ int add_student(int connFD)
     char readBuffer[1000], writeBuffer[1000];
 
     struct Student newStudent, previousStudent;
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
 
     //student login id
 
@@ -157,8 +153,9 @@ int add_student(int connFD)
     strcpy(newStudent.name, readBuffer);
 
     //student age
-    
+
     bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     strcpy(writeBuffer, ADMIN_ADD_STUDENT_AGE);
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)
@@ -167,7 +164,6 @@ int add_student(int connFD)
         return false;
     }
 
-    bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1)
     {
@@ -196,11 +192,17 @@ int add_student(int connFD)
 
     //student passsword
 
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
+
     char hashedPassword[1000];
-    strcpy(hashedPassword, crypt(AUTOGEN_PASSWORD, KEY_TO_CRYPT));
+    strcpy(hashedPassword,AUTOGEN_PASSWORD);
     strcpy(newStudent.password, hashedPassword);
 
     //student email
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s", ADMIN_ADD_STUDENT_EMAIL);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -213,13 +215,14 @@ int add_student(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading student email response from client!");
-        ;
         return false;
     }
 
     strcpy(newStudent.email, readBuffer);
 
      //student address
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s",ADMIN_ADD_STUDENT_ADDRESS);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -232,7 +235,6 @@ int add_student(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading student address response from client!");
-        ;
         return false;
     }
 
@@ -258,16 +260,13 @@ int add_student(int connFD)
     close(studentFileDescriptor);
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    sprintf(writeBuffer, "%s%d\n%s%s", ADMIN_ADD_STUDENT_AUTOGEN_LOGIN, newStudent.login_id, ADMIN_ADD_STUDENT_AUTOGEN_PASSWORD, AUTOGEN_PASSWORD);
-    strcat(writeBuffer, "^");
+    sprintf(writeBuffer, "%s%d\n%s%s\n", ADMIN_ADD_STUDENT_AUTOGEN_LOGIN, newStudent.login_id, ADMIN_ADD_STUDENT_AUTOGEN_PASSWORD, AUTOGEN_PASSWORD);
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)
     {
         perror("Error sending student loginID and password to the client!");
         return false;
     }
-
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     return newStudent.login_id;
 }
@@ -337,15 +336,15 @@ int add_faculty(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading faculty name response from client!");
-        ;
         return false;
     }
 
     strcpy(newFaculty.name, readBuffer);
-
-
+    
     //faculty dept
 
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s", ADMIN_ADD_FACULTY_DEPT);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -358,14 +357,14 @@ int add_faculty(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading faculty dept response from client!");
-        ;
         return false;
     }
 
     strcpy(newFaculty.dept, readBuffer);
 
-      //faculty desig
-
+    //faculty desig
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s", ADMIN_ADD_FACULTY_DESIG);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -378,7 +377,6 @@ int add_faculty(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading faculty desig response from client!");
-        ;
         return false;
     }
 
@@ -386,13 +384,10 @@ int add_faculty(int connFD)
 
     sprintf(writeBuffer, "%d", newFaculty.login_id);
 
-    //faculty passsword
-
-    char hashedPassword[1000];
-    strcpy(hashedPassword, crypt(AUTOGEN_PASSWORD, KEY_TO_CRYPT));
-    strcpy(newFaculty.password, hashedPassword);
-
     //faculty email
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s", ADMIN_ADD_FACULTY_EMAIL);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -405,11 +400,19 @@ int add_faculty(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading faculty email response from client!");
-        ;
         return false;
     }
 
     strcpy(newFaculty.email, readBuffer);
+
+
+    //faculty passsword
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
+    char hashedPassword[1000];
+    strcpy(hashedPassword,AUTOGEN_PASSWORD);
+    strcpy(newFaculty.password, hashedPassword);
 
     facultyFileDescriptor = open(FACULTY_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
     if (facultyFileDescriptor == -1)
@@ -688,7 +691,6 @@ bool modify_student_info(int connFD)
         perror("Error while writing Updated Successfully message to client!");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     return true;
 }
@@ -926,7 +928,6 @@ bool modify_faculty_info(int connFD)
         perror("Error while writing Updated Successfully message to client!");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     return true;
 }
@@ -1017,7 +1018,6 @@ bool activate_student(int connFD){
         perror("Error in sending already active message to client");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     close(studentFileDescriptor);
     return false;
@@ -1058,7 +1058,6 @@ bool activate_student(int connFD){
         perror("Error while writing Activated Successfully message to client!");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     return true;
 }
@@ -1101,7 +1100,6 @@ bool block_student (int connFD){
             perror("Error while writing Student ID doesn't exist message to client!");
             return false;
         }
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         return false;
     }
     int offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
@@ -1150,7 +1148,6 @@ bool block_student (int connFD){
         perror("Error in sending already updated message to client");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     close(studentFileDescriptor);
     return false;
@@ -1191,7 +1188,6 @@ bool block_student (int connFD){
         perror("Error while writing Blocked Successfully message to client!");
         return false;
     }
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
 
     return true;
 }

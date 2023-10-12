@@ -1,3 +1,5 @@
+#ifndef BASIC_FUNCTIONS
+#define BASIC_FUNCTIONS
 #include <stdio.h> 
 #include <unistd.h>
 #include <string.h>
@@ -7,9 +9,9 @@
 #include <fcntl.h>
 #include <stdlib.h>   
 #include <errno.h>     
-#include <crypt.h>
 #include "../structures/student.h"
 #include "../structures/faculty.h"
+#include "../structures/course.h"
 #include "./admin_cred.h"
 #include "./constants.h"
 
@@ -157,6 +159,7 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
 
     if (userFound)
     {
+        
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD,"Enter Your Password", strlen("Enter Your Password"));
         if (writeBytes == -1)
@@ -174,7 +177,7 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
         }
 
         char hashedPassword[1000];
-        strcpy(hashedPassword, crypt(readBuffer, KEY_TO_CRYPT));
+        strcpy(hashedPassword,readBuffer);
 
         if (isAdmin)
         {
@@ -190,6 +193,7 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
             }
         }
         else{
+        
             if (strcmp(hashedPassword, faculty.password) == 0)
             {
                 *ptrToFacultyID = faculty;
@@ -215,6 +219,9 @@ bool get_student_details(int connFD, int studentID)
     ssize_t readBytes, writeBytes;            
     char readBuffer[1000], writeBuffer[10000];
     char tempBuffer[1000];
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
 
     struct Student student;
     int studentFileDescriptor;
@@ -252,7 +259,6 @@ bool get_student_details(int connFD, int studentID)
             perror("Error while writing Student ID doesn't exist message to client!");
             return false;
         }
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         return false;
     }
     int offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
@@ -267,7 +273,6 @@ bool get_student_details(int connFD, int studentID)
             perror("Error while writing Student ID doesn't exist message to client!");
             return false;
         }
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         return false;
     }
     else if (offset == -1)
@@ -342,7 +347,6 @@ bool get_faculty_details(int connFD, int facultyID)
         if (readBytes == -1)
         {
             perror("Error getting faculty ID from client!");
-            ;
             return false;
         }
 
@@ -418,3 +422,5 @@ bool get_faculty_details(int connFD, int facultyID)
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     return true;
 }
+
+#endif
