@@ -14,6 +14,8 @@ Description : This file contain the server code
 #include <string.h>
 #include <signal.h>
 
+#include "./functionalities/admin.h"
+
 int socket_descriptor;
 
 void handle_client(int client_socket) {
@@ -42,8 +44,8 @@ void handle_client(int client_socket) {
             {
             case 1:
                 // Admin
-                // admin_operation_handler(client_socket);
-                write(client_socket, "Admin", strlen("Admin"));
+                admin_operation_handler(client_socket);
+                // write(client_socket, "Admin", strlen("Admin"));
                 break;
             case 2:
                 // Faculty
