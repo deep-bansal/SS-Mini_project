@@ -222,7 +222,7 @@ bool get_student_details(int connFD, int studentID)
 
     if (studentID == -1)
     {
-        writeBytes = write(connFD, "Enter the student ID of the student you're searching for", strlen("Enter the faculty ID of the faculty you're searching for"));
+        writeBytes = write(connFD, "Enter the student ID of the student you're searching for", strlen("Enter the student ID of the student you're searching for"));
         if (writeBytes == -1)
         {
             perror("Error while writing GET STUDENT ID message to client!");
@@ -295,7 +295,15 @@ bool get_student_details(int connFD, int studentID)
     fcntl(studentFileDescriptor, F_SETLK, &lock);
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    sprintf(writeBuffer, "Student Details - \n\tID : %d\n\tName : %s\n\tRoll No. : %d\n\tAge: %d\n\tEmail : %s\n\tAddress : %s", student.login_id, student.name, student.login_id, student.age, student.email, student.address);
+    sprintf(writeBuffer, "Student Details - \n\tID : %d\n\tName : %s\n\tRoll No. : %d\n\tAge: %d\n\tEmail : %s\n\tAddress : %s\n\t", student.login_id, student.name, student.login_id, student.age, student.email, student.address);
+    if(student.isActive){
+        char* appendStatus = "Active Status: Active";
+        strcat(writeBuffer,appendStatus);
+    }
+    else{
+        char* appendStatus = "Active Status: Blocked";
+        strcat(writeBuffer,appendStatus);
+    }
 
     strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
 

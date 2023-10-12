@@ -7,18 +7,15 @@
 
 // activate Student
 // block student
-// modify student details
-// modify faculty details
 
 bool admin_operation_handler(int connFD);
 
-
-// bool add_account(int connFD);
 int add_student(int connFD);
 int add_faculty(int connFD);
-// bool delete_account(int connFD);
 bool modify_student_info(int connFD);
 bool modify_faculty_info(int connFD);
+bool activate_student(int connFD);
+bool block_student(int connFD);
 
 bool admin_operation_handler(int connFD)
 {
@@ -63,12 +60,12 @@ bool admin_operation_handler(int connFD)
             case 4:
                 get_faculty_details(connFD,-1);
                 break;
-            // case 5:
-            //     activate_account(connFD);
-            //     break;
-            // case 6:
-            //     block_student(connFD);
-            //     break;
+            case 5:
+                activate_student(connFD);
+                break;
+            case 6:
+                block_student(connFD);
+                break;
             case 7:
                 modify_student_info(connFD);
                 break;
@@ -87,108 +84,6 @@ bool admin_operation_handler(int connFD)
     }
     return true;
 }
-
-// bool add_account(int connFD)
-// {
-//     ssize_t readBytes, writeBytes;
-//     char readBuffer[1000], writeBuffer[1000];
-
-//     struct Account newAccount, prevAccount;
-
-//     int accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
-//     if (accountFileDescriptor == -1 && errno == ENOENT)
-//     {
-//         // Account file was never created
-//         newAccount.accountNumber = 0;
-//     }
-//     else if (accountFileDescriptor == -1)
-//     {
-//         perror("Error while opening account file");
-//         return false;
-//     }
-//     else
-//     {
-//         int offset = lseek(accountFileDescriptor, -sizeof(struct Account), SEEK_END);
-//         if (offset == -1)
-//         {
-//             perror("Error seeking to last Account record!");
-//             return false;
-//         }
-
-//         struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Account), getpid()};
-//         int lockingStatus = fcntl(accountFileDescriptor, F_SETLKW, &lock);
-//         if (lockingStatus == -1)
-//         {
-//             perror("Error obtaining read lock on Account record!");
-//             return false;
-//         }
-
-//         readBytes = read(accountFileDescriptor, &prevAccount, sizeof(struct Account));
-//         if (readBytes == -1)
-//         {
-//             perror("Error while reading Account record from file!");
-//             return false;
-//         }
-
-//         lock.l_type = F_UNLCK;
-//         fcntl(accountFileDescriptor, F_SETLK, &lock);
-
-//         close(accountFileDescriptor);
-
-//         newAccount.accountNumber = prevAccount.accountNumber + 1;
-//     }
-//     writeBytes = write(connFD, ADMIN_ADD_ACCOUNT_TYPE, strlen(ADMIN_ADD_ACCOUNT_TYPE));
-//     if (writeBytes == -1)
-//     {
-//         perror("Error writing ADMIN_ADD_ACCOUNT_TYPE message to client!");
-//         return false;
-//     }
-
-//     bzero(readBuffer, sizeof(readBuffer));
-//     readBytes = read(connFD, &readBuffer, sizeof(readBuffer));
-//     if (readBytes == -1)
-//     {
-//         perror("Error reading account type response from client!");
-//         return false;
-//     }
-
-//     newAccount.isRegularAccount = atoi(readBuffer) == 1 ? true : false;
-
-//     newAccount.owners[0] = add_customer(connFD, true, newAccount.accountNumber);
-
-//     if (newAccount.isRegularAccount)
-//         newAccount.owners[1] = -1;
-//     else
-//         newAccount.owners[1] = add_customer(connFD, false, newAccount.accountNumber);
-
-//     newAccount.active = true;
-//     newAccount.balance = 0;
-
-//     memset(newAccount.transactions, -1, MAX_TRANSACTIONS * sizeof(int));
-
-//     accountFileDescriptor = open(ACCOUNT_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
-//     if (accountFileDescriptor == -1)
-//     {
-//         perror("Error while creating / opening account file!");
-//         return false;
-//     }
-
-//     writeBytes = write(accountFileDescriptor, &newAccount, sizeof(struct Account));
-//     if (writeBytes == -1)
-//     {
-//         perror("Error while writing Account record to file!");
-//         return false;
-//     }
-
-//     close(accountFileDescriptor);
-
-//     bzero(writeBuffer, sizeof(writeBuffer));
-//     sprintf(writeBuffer, "%s%d", ADMIN_ADD_ACCOUNT_NUMBER, newAccount.accountNumber);
-//     strcat(writeBuffer, "\nRedirecting you to the main menu ...^");
-//     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
-//     readBytes = read(connFD, readBuffer, sizeof(read)); // Dummy read
-//     return true;
-// }
 
 int add_student(int connFD)
 {
@@ -343,6 +238,8 @@ int add_student(int connFD)
 
     strcpy(newStudent.address, readBuffer);
 
+    //active status
+    newStudent.isActive = 1;
 
 
     studentFileDescriptor = open(STUDENT_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
@@ -543,146 +440,6 @@ int add_faculty(int connFD)
 
     return newFaculty.login_id;
 }
-
-
-// bool delete_account(int connFD)
-// {
-//     ssize_t readBytes, writeBytes;
-//     char readBuffer[1000], writeBuffer[1000];
-
-//     struct Account account;
-
-//     writeBytes = write(connFD, ADMIN_DEL_ACCOUNT_NO, strlen(ADMIN_DEL_ACCOUNT_NO));
-//     if (writeBytes == -1)
-//     {
-//         perror("Error writing ADMIN_DEL_ACCOUNT_NO to client!");
-//         return false;
-//     }
-
-//     bzero(readBuffer, sizeof(readBuffer));
-//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
-//     if (readBytes == -1)
-//     {
-//         perror("Error reading account number response from the client!");
-//         return false;
-//     }
-
-//     int accountNumber = atoi(readBuffer);
-
-//     int accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
-//     if (accountFileDescriptor == -1)
-//     {
-//         // Account record doesn't exist
-//         bzero(writeBuffer, sizeof(writeBuffer));
-//         strcpy(writeBuffer, ACCOUNT_ID_DOESNT_EXIT);
-//         strcat(writeBuffer, "^");
-//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-//         if (writeBytes == -1)
-//         {
-//             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-//             return false;
-//         }
-//         readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
-//         return false;
-//     }
-
-
-//     int offset = lseek(accountFileDescriptor, accountNumber * sizeof(struct Account), SEEK_SET);
-//     if (errno == EINVAL)
-//     {
-//         // Customer record doesn't exist
-//         bzero(writeBuffer, sizeof(writeBuffer));
-//         strcpy(writeBuffer, ACCOUNT_ID_DOESNT_EXIT);
-//         strcat(writeBuffer, "^");
-//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-//         if (writeBytes == -1)
-//         {
-//             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-//             return false;
-//         }
-//         readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
-//         return false;
-//     }
-//     else if (offset == -1)
-//     {
-//         perror("Error while seeking to required account record!");
-//         return false;
-//     }
-
-//     struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Account), getpid()};
-//     int lockingStatus = fcntl(accountFileDescriptor, F_SETLKW, &lock);
-//     if (lockingStatus == -1)
-//     {
-//         perror("Error obtaining read lock on Account record!");
-//         return false;
-//     }
-
-//     readBytes = read(accountFileDescriptor, &account, sizeof(struct Account));
-//     if (readBytes == -1)
-//     {
-//         perror("Error while reading Account record from file!");
-//         return false;
-//     }
-
-//     lock.l_type = F_UNLCK;
-//     fcntl(accountFileDescriptor, F_SETLK, &lock);
-
-//     close(accountFileDescriptor);
-
-//     bzero(writeBuffer, sizeof(writeBuffer));
-//     if (account.balance == 0)
-//     {
-//         // No money, hence can close account
-//         account.active = false;
-//         accountFileDescriptor = open(ACCOUNT_FILE, O_WRONLY);
-//         if (accountFileDescriptor == -1)
-//         {
-//             perror("Error opening Account file in write mode!");
-//             return false;
-//         }
-
-//         offset = lseek(accountFileDescriptor, accountNumber * sizeof(struct Account), SEEK_SET);
-//         if (offset == -1)
-//         {
-//             perror("Error seeking to the Account!");
-//             return false;
-//         }
-
-//         lock.l_type = F_WRLCK;
-//         lock.l_start = offset;
-
-//         int lockingStatus = fcntl(accountFileDescriptor, F_SETLKW, &lock);
-//         if (lockingStatus == -1)
-//         {
-//             perror("Error obtaining write lock on the Account file!");
-//             return false;
-//         }
-
-//         writeBytes = write(accountFileDescriptor, &account, sizeof(struct Account));
-//         if (writeBytes == -1)
-//         {
-//             perror("Error deleting account record!");
-//             return false;
-//         }
-
-//         lock.l_type = F_UNLCK;
-//         fcntl(accountFileDescriptor, F_SETLK, &lock);
-
-//         strcpy(writeBuffer, ADMIN_DEL_ACCOUNT_SUCCESS);
-//     }
-//     else
-//         // Account has some money ask customer to withdraw it
-//         strcpy(writeBuffer, ADMIN_DEL_ACCOUNT_FAILURE);
-//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-//     if (writeBytes == -1)
-//     {
-//         perror("Error while writing final DEL message to client!");
-//         return false;
-//     }
-//     readBytes = read(connFD, readBuffer, sizeof(readBuffer)); // Dummy read
-
-//     return true;
-// }
 
 bool modify_student_info(int connFD)
 {
@@ -1173,5 +930,271 @@ bool modify_faculty_info(int connFD)
 
     return true;
 }
+
+bool activate_student(int connFD){
+    ssize_t readBytes, writeBytes;            
+    char readBuffer[10], writeBuffer[100];
+
+    struct Student student;
+    int studentFileDescriptor;
+    struct flock lock = {F_RDLCK, SEEK_SET, 0, sizeof(struct Student), getpid()};
+
+    writeBytes = write(connFD, "Enter the student ID of the student you want to activate", strlen("Enter the student ID of the student you want to activate"));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing GET STUDENT ID message to client!");
+        return false;
+    }
+
+    bzero(readBuffer, sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1)
+    {
+        perror("Error getting student ID from client!");
+        return false;
+    }
+
+    int studentID = atoi(readBuffer);
+
+    studentFileDescriptor = open(STUDENT_FILE, O_RDWR);
+    if (studentFileDescriptor == -1)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "Student ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing Student ID doesn't exist message to client!");
+            return false;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        return false;
+    }
+    int offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
+    if (errno == EINVAL)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "Student ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing Student ID doesn't exist message to client!");
+            return false;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        return false;
+    }
+    else if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+    lock.l_start = offset;
+
+    int lockingStatus = fcntl(studentFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the student file!");
+        return false;
+    }
+
+    readBytes = read(studentFileDescriptor, &student, sizeof(struct Student));
+    if (readBytes == -1)
+    {
+        perror("Error reading student record from file!");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(studentFileDescriptor, F_SETLK, &lock);
+
+    if(student.isActive == 1){
+    writeBytes = write(connFD, "Student already active", strlen("Student already active"));
+    if (writeBytes == -1)
+    {
+        perror("Error in sending already active message to client");
+        return false;
+    }
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+
+    close(studentFileDescriptor);
+    return false;
+    }
+    
+    student.isActive = 1;
+
+    offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+
+    lock.l_type = F_WRLCK;
+    lock.l_start = offset;
+    lockingStatus = fcntl(studentFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining write lock on student record!");
+        return false;
+    }
+
+    writeBytes = write(studentFileDescriptor, &student, sizeof(struct Student));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing update student info into file");
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(studentFileDescriptor, F_SETLKW, &lock);
+
+    close(studentFileDescriptor);
+
+    writeBytes = write(connFD, "Activated Successfully", strlen("Activated Successfully"));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing Activated Successfully message to client!");
+        return false;
+    }
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+
+    return true;
+}
+
+
+bool block_student (int connFD){
+    ssize_t readBytes, writeBytes;            
+    char readBuffer[10], writeBuffer[100];
+
+    struct Student student;
+    int studentFileDescriptor;
+    struct flock lock = {F_RDLCK, SEEK_SET, 0, sizeof(struct Student), getpid()};
+
+    writeBytes = write(connFD, "Enter the student ID of the student you want to block", strlen("Enter the student ID of the student you want to block"));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing GET STUDENT ID message to client!");
+        return false;
+    }
+
+    bzero(readBuffer, sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1)
+    {
+        perror("Error getting student ID from client!");
+        return false;
+    }
+
+    int studentID = atoi(readBuffer);
+
+    studentFileDescriptor = open(STUDENT_FILE, O_RDWR);
+    if (studentFileDescriptor == -1)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "Student ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing Student ID doesn't exist message to client!");
+            return false;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        return false;
+    }
+    int offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
+    if (errno == EINVAL)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "Student ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing Student ID doesn't exist message to client!");
+            return false;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        return false;
+    }
+    else if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+    lock.l_start = offset;
+
+    int lockingStatus = fcntl(studentFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the student file!");
+        return false;
+    }
+
+    readBytes = read(studentFileDescriptor, &student, sizeof(struct Student));
+    if (readBytes == -1)
+    {
+        perror("Error reading student record from file!");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(studentFileDescriptor, F_SETLK, &lock);
+
+    if(student.isActive == 0){
+    writeBytes = write(connFD, "Student already blocked", strlen("Student already blocked"));
+    if (writeBytes == -1)
+    {
+        perror("Error in sending already updated message to client");
+        return false;
+    }
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+
+    close(studentFileDescriptor);
+    return false;
+    }
+    
+    student.isActive = 0;
+
+    offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+
+    lock.l_type = F_WRLCK;
+    lock.l_start = offset;
+    lockingStatus = fcntl(studentFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining write lock on student record!");
+        return false;
+    }
+
+    writeBytes = write(studentFileDescriptor, &student, sizeof(struct Student));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing block student info into file");
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(studentFileDescriptor, F_SETLKW, &lock);
+
+    close(studentFileDescriptor);
+
+    writeBytes = write(connFD, "Blocked Successfully", strlen("Blocked Successfully"));
+    if (writeBytes == -1)
+    {
+        perror("Error while writing Blocked Successfully message to client!");
+        return false;
+    }
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+
+    return true;
+}
+
 
 #endif
