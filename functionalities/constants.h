@@ -26,7 +26,17 @@
 //admin mode updates
 #define ADMIN_UPDATE_STUDENT_ID "Enter the ID of the student who's information you want to edit"
 #define ADMIN_UPDATE_STUDENT_MENU "Which information would you like to modify?\n1. Name 2. Age 3. Email 4. Address \nPress any other key to cancel"
-#define ADMIN_UPDATE_STUDENT_NAME "New name of student"
+#define ADMIN_UPDATE_STUDENT_NAME "Enter updated name of student"
+#define ADMIN_UPDATE_STUDENT_AGE "Enter updated age of student"
+#define ADMIN_UPDATE_STUDENT_EMAIL "Enter updated email of student"
+#define ADMIN_UPDATE_STUDENT_ADDRESS "Enter updated address of student"
+
+#define ADMIN_UPDATE_FACULTY_ID "Enter the ID of the faculty who's information you want to edit"
+#define ADMIN_UPDATE_FACULTY_MENU "Which information would you like to modify?\n1. Name 2. Department 3. Email 4. Designation \nPress any other key to cancel"
+#define ADMIN_UPDATE_FACULTY_NAME "Enter updated name of faculty"
+#define ADMIN_UPDATE_FACULTY_DEPT "Enter updated department of faculty"
+#define ADMIN_UPDATE_FACULTY_EMAIL "Enter updated email of faculty"
+#define ADMIN_UPDATE_FACULTY_DESIG "Enter updated designation of faculty"
 
 
 #define ERRON_INPUT_FOR_NUMBER "It seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
