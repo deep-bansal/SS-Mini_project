@@ -46,6 +46,14 @@
 #define FACULTY_ADD_COURSE_DEPT "What is the course's department?"
 #define FACULTY_ADD_COURSE_TOTAL_SEATS "What is the total number of seats in course?"
 #define FACULTY_ADD_COURSE_CREDITS "How many credits are for this course?"
+#define FACULTY_COURSE_TO_DELETE "Which course do you want to delete, enter the ID?"
+
+#define FACULTY_UPDATE_COURSE_ID "Enter the ID of the course who's information you want to edit"
+#define FACULTY_UPDATE_COURSE_MENU "Which information would you like to modify?\n1. Name 2. Department 3. Credits \nPress any other key to cancel"
+#define FACULTY_UPDATE_COURSE_NAME "Enter updated name of course"
+#define FACULTY_UPDATE_COURSE_DEPT "Enter updated department of course"
+#define FACULTY_UPDATE_COURSE_CREDITS "Enter updated credits of course"
+
 
 #define ERRON_INPUT_FOR_NUMBER "It seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
 #define AUTOGEN_PASSWORD "academia" 
