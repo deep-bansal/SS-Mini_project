@@ -9,6 +9,7 @@ struct Course{
     int available_seats;
     int faculty_id;
     int course_id;
+    bool isActive;
 
 };
 

@@ -146,14 +146,12 @@ int add_student(int connFD)
     if (readBytes == -1)
     {
         perror("Error reading student name response from client!");
-        ;
         return false;
     }
 
     strcpy(newStudent.name, readBuffer);
 
     //student age
-
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
     strcpy(writeBuffer, ADMIN_ADD_STUDENT_AGE);
@@ -191,16 +189,14 @@ int add_student(int connFD)
     sprintf(writeBuffer, "%d", newStudent.login_id);
 
     //student passsword
-
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
 
-    char hashedPassword[1000];
-    strcpy(hashedPassword,AUTOGEN_PASSWORD);
-    strcpy(newStudent.password, hashedPassword);
+    char password[1000];
+    strcpy(password,AUTOGEN_PASSWORD);
+    strcpy(newStudent.password, password);
 
     //student email
-
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
     sprintf(writeBuffer, "%s", ADMIN_ADD_STUDENT_EMAIL);
@@ -243,7 +239,12 @@ int add_student(int connFD)
     //active status
     newStudent.isActive = 1;
 
-
+    //enrolled courses
+    for (int i = 0; i < 4; i++)
+    {
+        newStudent.courses_enrolled[i] = -1;
+    }
+    
     studentFileDescriptor = open(STUDENT_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
     if (studentFileDescriptor == -1)
     {

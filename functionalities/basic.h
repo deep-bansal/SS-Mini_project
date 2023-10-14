@@ -217,13 +217,12 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
 bool get_student_details(int connFD, int studentID)
 {
     ssize_t readBytes, writeBytes;            
-    char readBuffer[1000], writeBuffer[10000];
-    char tempBuffer[1000];
+    char readBuffer[1024], writeBuffer[1024];
 
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
 
-    struct Student student;
+    struct Student student = {0};
     int studentFileDescriptor;
     struct flock lock = {F_RDLCK, SEEK_SET, 0, sizeof(struct Student), getpid()};
 
@@ -252,7 +251,6 @@ bool get_student_details(int connFD, int studentID)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -266,7 +264,6 @@ bool get_student_details(int connFD, int studentID)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -326,8 +323,7 @@ bool get_student_details(int connFD, int studentID)
 bool get_faculty_details(int connFD, int facultyID)
 {
     ssize_t readBytes, writeBytes;             
-    char readBuffer[1000], writeBuffer[10000]; 
-    char tempBuffer[1000];
+    char readBuffer[1024], writeBuffer[1024]; 
 
     struct Faculty faculty;
     int facultyFileDescriptor;
@@ -358,7 +354,6 @@ bool get_faculty_details(int connFD, int facultyID)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Faculty ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -373,7 +368,6 @@ bool get_faculty_details(int connFD, int facultyID)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Faculty ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {

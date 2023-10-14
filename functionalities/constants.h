@@ -54,6 +54,7 @@
 #define FACULTY_UPDATE_COURSE_DEPT "Enter updated department of course"
 #define FACULTY_UPDATE_COURSE_CREDITS "Enter updated credits of course"
 
+#define STUDENT_MENU "1. View All Courses\n2. Enroll To New Course\n3. Drop Course\n4. View Enrolled Course Details\n5. Change Password\nPress any other key to logout"
 
 #define ERRON_INPUT_FOR_NUMBER "It seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
 #define AUTOGEN_PASSWORD "academia" 

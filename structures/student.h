@@ -9,5 +9,6 @@ struct Student{
     char email[30];
     char address[30];
     bool isActive;
+    int courses_enrolled[4];
 };
  #endif

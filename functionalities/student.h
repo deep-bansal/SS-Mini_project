@@ -1,0 +1,1276 @@
+// enroll to a course
+// drop course
+// view enrolled course details
+//change pwd
+
+#ifndef STUDENT_FUNCTIONS
+#define STUDENT_FUNCTIONS
+
+#include "./basic.h"
+
+bool student_operation_handler(int connFD);
+
+bool view_all_courses(int connFD);
+bool enroll_to_new_course(int connFD);
+bool drop_course(int connFD);
+// bool View_enrolled_course_details(int connFD);
+// bool change_pwd(int connFD);
+
+struct Student loggedIn_student;
+                
+
+bool student_operation_handler(int connFD)
+{
+
+    if (login_handler(false,true, connFD, &loggedIn_student,NULL))
+    {
+        ssize_t writeBytes, readBytes;
+        char readBuffer[1000], writeBuffer[1000];
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "Welcome");
+        while (1)
+        {
+            strcat(writeBuffer, "\n");
+            strcat(writeBuffer, STUDENT_MENU);
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+            if (writeBytes == -1)
+            {
+                perror("Error while writing STUDENT_MENU to client!");
+                return false;
+            }
+            bzero(writeBuffer, sizeof(writeBuffer));
+
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+            if (readBytes == -1)
+            {
+                perror("Error while reading client's choice for STUDENT_MENU");
+                return false;
+            }
+
+            int choice = atoi(readBuffer);
+            switch (choice)
+            {
+            case 1:
+                view_all_courses(connFD);
+                break;
+            case 2:
+                enroll_to_new_course(connFD);
+                break;
+            case 3:
+                drop_course(connFD);
+                break;
+            case 4:
+                // View_enrolled_course_details(connFD);
+                break;
+            case 5:
+                // change_pwd(connFD);
+                break;
+            case 6:
+                writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                return false;
+            default:
+                writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                return false;
+            }
+        }
+    }
+    else
+    {
+        return false;
+    }
+    return true;
+}
+
+// int add_new_course(int connFD){
+//     ssize_t readBytes, writeBytes;
+//     char readBuffer[1000], writeBuffer[1000];
+
+//     struct Course newCourse, previousCourse;
+
+//     //course_id
+
+//     int courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+//     if (courseFileDescriptor == -1 && errno == ENOENT)
+//     {
+//         newCourse.course_id = 0;
+//     }
+//     else if (courseFileDescriptor == -1)
+//     {
+//         perror("Error while opening course file");
+//         return -1;
+//     }
+//     else
+//     {
+//         int offset = lseek(courseFileDescriptor, -sizeof(struct Course), SEEK_END);
+//         if (offset == -1)
+//         {
+//             perror("Error seeking to last course record!");
+//             return false;
+//         }
+
+//         struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Course), getpid()};
+//         int lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
+//         if (lockingStatus == -1)
+//         {
+//             perror("Error obtaining read lock on course record!");
+//             return false;
+//         }
+
+//         readBytes = read(courseFileDescriptor, &previousCourse, sizeof(struct Course));
+//         if (readBytes == -1)
+//         {
+//             perror("Error while reading course record from file!");
+//             return false;
+//         }
+
+//         lock.l_type = F_UNLCK;
+//         fcntl(courseFileDescriptor, F_SETLK, &lock);
+
+//         close(courseFileDescriptor);
+
+//         newCourse.course_id = previousCourse.course_id + 1;
+//     }
+
+//     //course name
+
+//     sprintf(writeBuffer, "%s", FACULTY_ADD_COURSE_NAME);
+//     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error writing FACULTY_ADD_COURSE_NAME message to client!");
+//         return false;
+//     }
+
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error reading course name response from client!");
+//         return false;
+//     }
+
+//     strcpy(newCourse.name, readBuffer);
+
+//     //course dept
+
+//     sprintf(writeBuffer, "%s", FACULTY_ADD_COURSE_DEPT);
+//     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error writing FACULTY_ADD_COURSE_DEPT message to client!");
+//         return false;
+//     }
+
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error reading course name response from client!");
+//         return false;
+//     }
+
+//     strcpy(newCourse.dept, readBuffer);
+
+//     //course total seats
+    
+//     bzero(writeBuffer, sizeof(writeBuffer));
+//     strcpy(writeBuffer, FACULTY_ADD_COURSE_TOTAL_SEATS);
+//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error writing FACULTY_ADD_COURSE_TOTAL_SEATS message to client!");
+//         return false;
+//     }
+
+//     bzero(readBuffer, sizeof(readBuffer));
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error reading total seats response from client!");
+//         return false;
+//     }
+
+//     int totalseats = atoi(readBuffer);
+//     if (totalseats == 0)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, ERRON_INPUT_FOR_NUMBER);
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing ERRON_INPUT_FOR_NUMBER message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//         return false;
+//     }
+//     newCourse.total_seats = totalseats;
+
+//     //course credits
+    
+//     bzero(writeBuffer, sizeof(writeBuffer));
+//     strcpy(writeBuffer, FACULTY_ADD_COURSE_CREDITS);
+//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error writing FACULTY_ADD_COURSE_CREDITS message to client!");
+//         return false;
+//     }
+
+//     bzero(readBuffer, sizeof(readBuffer));
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error reading credits response from client!");
+//         return false;
+//     }
+
+//     int credits = atoi(readBuffer);
+//     if (credits == 0)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, ERRON_INPUT_FOR_NUMBER);
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing ERRON_INPUT_FOR_NUMBER message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//         return false;
+//     }
+//     newCourse.credits = credits;
+
+//     //course availabel seats
+    
+//     newCourse.available_seats = totalseats;
+
+//     //course faculty id
+//     newCourse.faculty_id = loggedIn_faculty.login_id;
+
+
+//     // sprintf(writeBuffer, "%d", newCourse.course_id);
+
+
+//     courseFileDescriptor = open(COURSE_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
+//     if (courseFileDescriptor == -1)
+//     {
+//         perror("Error while creating / opening course file!");
+//         return false;
+//     }
+//     writeBytes = write(courseFileDescriptor, &newCourse, sizeof(newCourse));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing Course record to file!");
+//         return false;
+//     }
+
+//     close(courseFileDescriptor);
+
+//     bzero(writeBuffer, sizeof(writeBuffer));
+//     sprintf(writeBuffer, "%s%d\n", "Course ID-", newCourse.course_id);
+//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error sending course ID  to the client!");
+//         return false;
+//     }    
+
+//     return newCourse.course_id;
+
+// }
+
+bool view_all_courses (int connFD)
+{
+    ssize_t readBytes, writeBytes;            
+    char readBuffer[10], writeBuffer[10000];
+
+    if(loggedIn_student.isActive == 0){
+        strcpy(writeBuffer,"You are blocked by admin!\n Contact him to unblock\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing blocked message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    int CourseFileDescriptor;
+
+    struct flock lock;
+    lock.l_type = F_RDLCK;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_pid = getpid();
+
+    CourseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+    if (CourseFileDescriptor == -1)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "No course exist!");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing no course exist message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    int lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the course file!");
+        return false;
+    }
+
+    struct Course course;
+
+    while(1){
+
+        struct Course course;
+        readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+        
+        if(readBytes <= 0) break;
+        bzero(writeBuffer, sizeof(writeBuffer));
+        sprintf(writeBuffer, "Course Details- \n\tCourse ID- %d\n\tName : %s\n\tDepartment : %s\n\tTotal Seats: %d\n\tCredits : %d\n\tAvailable Seats : %d\n\n", course.course_id, course.name, course.dept, course.total_seats, course.credits, course.available_seats);
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error writing course info to client!");
+            return false;
+        }
+
+    }
+
+    if (readBytes == -1)
+    {
+        perror("Error reading course record from file!");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLK, &lock);
+    close(CourseFileDescriptor);
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    strcpy(writeBuffer, "\nYou'll now be redirected to the main menu...");
+
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1)
+    {
+        perror("Error writing redirect msg to client!");
+        return false;
+    }
+
+    return true;
+}
+
+bool enroll_to_new_course(int connFD){
+
+    ssize_t readBytes, writeBytes;            
+    char readBuffer[10], writeBuffer[10000];
+
+    int courseID;
+
+    if(loggedIn_student.isActive == 0){
+        strcpy(writeBuffer,"You are blocked by admin!\n Contact him to unblock\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing blocked message to client!");
+            return false;
+        }
+        return false;
+    }
+
+    bool slot_empty = false;
+    
+    for(int i = 0; i < 4; i++){
+        if(loggedIn_student.courses_enrolled[i] == -1 ){
+            slot_empty = true;
+            break;
+        }
+    }
+
+    if(!slot_empty){
+        strcpy(writeBuffer,"You have already taken all the courses, drop some to enroll");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing already full message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    int CourseFileDescriptor;
+
+    struct flock lock;
+    lock.l_type = F_RDLCK;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_pid = getpid();
+
+    CourseFileDescriptor = open(COURSE_FILE, O_RDWR);
+    if (CourseFileDescriptor == -1)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "No course exist!");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing no course exist message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    int lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the course file!");
+        return false;
+    }
+
+    while(1){
+
+        struct Course course;
+        readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+        
+        if(readBytes <= 0) break;
+        bzero(writeBuffer, sizeof(writeBuffer));
+        sprintf(writeBuffer, "Course ID- %d\tName : %s\n", course.course_id, course.name);
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error writing course info to client!");
+            return false;
+        }
+
+    }
+
+    if (readBytes == -1)
+    {
+        perror("Error reading course record from file!");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLK, &lock);
+
+    strcpy(writeBuffer, "\nEnter the course ID you want to enroll for..\n");
+
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1)
+    {
+        perror("Error writing enter course ID msg to client!");
+        return false;
+    }
+
+    bzero(readBuffer,sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1)
+    {
+        perror("Error while reading client's choice for course to enroll in");
+        return false;
+    }
+
+    courseID = atoi(readBuffer);
+
+    lock.l_type = F_RDLCK;
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the course file!");
+        return false;
+    }
+
+    struct Course course;
+    int offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    if (errno == EINVAL)
+    {
+        // Course record doesn't exist
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "course ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing course ID doesn't exist message to client!");
+            return false;
+        }
+        return false;
+    }
+    else if (offset == -1)
+    {
+        perror("Error while seeking to required course record!");
+        return false;
+    }
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Couldn't obtain lock on course record!");
+        return false;
+    }
+
+
+    readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+    if(readBytes == -1){
+        perror("Error in fetching the reqd course record");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLK, &lock);
+
+    if(course.available_seats <= 0 ){
+        bzero(writeBuffer,strlen(writeBuffer));
+        strcpy(writeBuffer,"The course is already full\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing course full message to client!");
+            return false;
+        }
+        return false;
+    }
+
+    bool already_enrolled = false;
+    for (int i = 0; i < 4; i++)
+    {
+        if(loggedIn_student.courses_enrolled[i] == course.course_id){
+            already_enrolled = true;
+            break;
+        }
+    }
+
+    if(already_enrolled ){
+        bzero(writeBuffer,strlen(writeBuffer));
+        strcpy(writeBuffer,"You are already enrolled\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while already enrolled message to client!");
+            return false;
+        }
+        return false;
+    }
+
+    lock.l_type = F_WRLCK;
+
+    struct flock lock2;
+    lock2.l_type = F_WRLCK;
+    lock2.l_start = 0;
+    lock2.l_len = 0;
+    lock2.l_whence = SEEK_SET;
+    lock2.l_pid = getpid();
+
+    int studentFileDescriptor = open(STUDENT_FILE, O_RDWR);
+    if (studentFileDescriptor == -1)
+    {
+        perror("Error in opening student file");
+        return false;
+    }
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    int lockingStatus2 = fcntl(studentFileDescriptor,F_SETLKW, &lock2);
+
+    if(lockingStatus2 == -1 || lockingStatus == -1){
+        perror("error in acquiring locks");
+        return false;
+    }
+
+    course.available_seats = course.available_seats - 1;
+
+    offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required course record!");
+        return false;
+    }
+
+    writeBytes = write(CourseFileDescriptor, &course, sizeof(struct Course));
+    if (writeBytes == -1)
+    {
+        perror("Error while reducing number of course seats");
+        return false;
+    }
+
+
+    struct Student student;
+    offset = lseek(studentFileDescriptor, (loggedIn_student.login_id) * sizeof(struct Student), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+
+    readBytes = read(studentFileDescriptor, &student, sizeof(struct Student)); 
+    if(readBytes == -1){
+        perror("Error in fetching the reqd student record");
+        return false;
+    }
+
+    for(int i = 0; i < 4; i++){
+        if(student.courses_enrolled[i] == -1){
+            student.courses_enrolled[i] = courseID;
+            break;
+        }
+    }
+
+    writeBytes = write(studentFileDescriptor, &student, sizeof(struct Student));
+    if (writeBytes == -1)
+    {
+        perror("Error while pushing course in student record");
+        return false;
+    }
+
+
+    lock.l_type = F_UNLCK;
+    lock2.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    fcntl(studentFileDescriptor, F_SETLKW, &lock2);
+
+    close(studentFileDescriptor);
+    close(CourseFileDescriptor);
+
+    bzero(writeBuffer,sizeof(writeBuffer));
+    strcpy(writeBuffer,"Enrolled Successfully");
+
+    strcat(writeBuffer, "\nYou'll now be redirected to the main menu...");
+
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1)
+    {
+        perror("Error writing redirect msg to client!");
+        return false;
+    }
+
+}
+
+bool drop_course(int connFD){
+
+    ssize_t readBytes, writeBytes;            
+    char readBuffer[10], writeBuffer[10000];
+
+    int courseID,lockingStatus;
+
+    if(loggedIn_student.isActive == 0){
+        strcpy(writeBuffer,"You are blocked by admin!\n Contact him to unblock\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing blocked message to client!");
+            return false;
+        }
+        return false;
+    }
+
+    
+    int CourseFileDescriptor;
+
+    struct flock lock;
+    lock.l_type = F_RDLCK;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_pid = getpid();
+
+    CourseFileDescriptor = open(COURSE_FILE, O_RDWR);
+    if (CourseFileDescriptor == -1)
+    {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "No course exist!");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing no course exist message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    
+    strcpy(writeBuffer, "\nEnter the course ID you want to drop ..\n");
+
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1)
+    {
+        perror("Error writing enter course ID msg to client!");
+        return false;
+    }
+
+    bzero(readBuffer,sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1)
+    {
+        perror("Error while reading client's choice for course to drop");
+        return false;
+    }
+
+    courseID = atoi(readBuffer);
+
+    bool enrolled = false;
+    for (int i = 0; i < 4; i++)
+    {
+        if(loggedIn_student.courses_enrolled[i] == courseID){
+            enrolled = true;
+            break;
+        }
+    }
+
+    if(!enrolled){
+        bzero(writeBuffer,strlen(writeBuffer));
+        strcpy(writeBuffer,"You are not enrolled in this course");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing not enrolled message to client!");
+            return false;
+        }
+        return false;
+    }
+    
+    lock.l_type = F_RDLCK;
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Error while obtaining read lock on the course file!");
+        return false;
+    }
+
+    struct Course course;
+    int offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    if (errno == EINVAL)
+    {
+        // Course record doesn't exist
+        bzero(writeBuffer, sizeof(writeBuffer));
+        strcpy(writeBuffer, "course ID doesn't exist");
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing course ID doesn't exist message to client!");
+            return false;
+        }
+        return false;
+    }
+    else if (offset == -1)
+    {
+        perror("Error while seeking to required course record!");
+        return false;
+    }
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    if (lockingStatus == -1)
+    {
+        perror("Couldn't obtain lock on course record!");
+        return false;
+    }
+
+
+    readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+    if(readBytes == -1){
+        perror("Error in fetching the reqd course record");
+        return false;
+    }
+
+    lock.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLK, &lock);
+
+    lock.l_type = F_WRLCK;
+
+    struct flock lock2;
+    lock2.l_type = F_WRLCK;
+    lock2.l_start = 0;
+    lock2.l_len = 0;
+    lock2.l_whence = SEEK_SET;
+    lock2.l_pid = getpid();
+
+    int studentFileDescriptor = open(STUDENT_FILE, O_RDWR);
+    if (studentFileDescriptor == -1)
+    {
+        perror("Error in opening student file");
+        return false;
+    }
+
+    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    int lockingStatus2 = fcntl(studentFileDescriptor,F_SETLKW, &lock2);
+
+    if(lockingStatus2 == -1 || lockingStatus == -1){
+        perror("error in acquiring locks");
+        return false;
+    }
+
+    course.available_seats = course.available_seats + 1;
+
+    offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required course record!");
+        return false;
+    }
+
+    writeBytes = write(CourseFileDescriptor, &course, sizeof(struct Course));
+    if (writeBytes == -1)
+    {
+        perror("Error while increasing number of course seats");
+        return false;
+    }
+
+
+    struct Student student;
+    offset = lseek(studentFileDescriptor, (loggedIn_student.login_id) * sizeof(struct Student), SEEK_SET);
+    if (offset == -1)
+    {
+        perror("Error while seeking to required student record!");
+        return false;
+    }
+
+    readBytes = read(studentFileDescriptor, &student, sizeof(struct Student)); 
+    if(readBytes == -1){
+        perror("Error in fetching the reqd student record");
+        return false;
+    }
+
+    for(int i = 0; i < 4; i++){
+        if(student.courses_enrolled[i] == courseID){
+            student.courses_enrolled[i] = -1;
+            break;
+        }
+    }
+
+    writeBytes = write(studentFileDescriptor, &student, sizeof(struct Student));
+    if (writeBytes == -1)
+    {
+        perror("Error while removing course in student record");
+        return false;
+    }
+
+
+    lock.l_type = F_UNLCK;
+    lock2.l_type = F_UNLCK;
+    fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    fcntl(studentFileDescriptor, F_SETLKW, &lock2);
+
+    close(studentFileDescriptor);
+    close(CourseFileDescriptor);
+
+    bzero(writeBuffer,sizeof(writeBuffer));
+    strcpy(writeBuffer,"Dropped Successfully");
+
+    strcat(writeBuffer, "\nYou'll now be redirected to the main menu...");
+
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1)
+    {
+        perror("Error writing redirect msg to client!");
+        return false;
+    }
+
+}
+
+// bool remove_course (int connFD)
+// {
+//     ssize_t readBytes, writeBytes;
+//     char readBuffer[1000], writeBuffer[1000];
+
+//     struct Course course;
+
+//     writeBytes = write(connFD, FACULTY_COURSE_TO_DELETE, strlen(FACULTY_COURSE_TO_DELETE));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error writing FACULTY_COURSE_TO_DELETE to client!");
+//         return false;
+//     }
+
+//     bzero(readBuffer, sizeof(readBuffer));
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error reading course ID response from the client!");
+//         return false;
+//     }
+
+//     int courseID = atoi(readBuffer);
+
+//     int courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+//     if (courseFileDescriptor == -1)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, "Course ID doesn't exist");
+//         strcat(writeBuffer, "^");
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing Course ID doesn't exist message to client!");
+//             return false;
+//         }
+//         close(courseFileDescriptor);
+//         return false;
+//     }
+
+
+//     int offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+//     if (errno == EINVAL)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, "Course ID doesn't exist");
+//         strcat(writeBuffer, "^");
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing Course ID doesn't exist message to client!");
+//             return false;
+//         }
+//         close(courseFileDescriptor);
+//         return false;
+//     }
+//     else if (offset == -1)
+//     {
+//         perror("Error while seeking to required course record!");
+//         close(courseFileDescriptor);
+//         return false;
+//     }
+
+//     struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Course), getpid()};
+//     int lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
+//     if (lockingStatus == -1)
+//     {
+//         perror("Error obtaining read lock on Course record!");
+//         return false;
+//     }
+
+//     readBytes = read(courseFileDescriptor, &course, sizeof(struct Course));
+//     if (readBytes == -1)
+//     {
+//         perror("Error while reading Course record from file!");
+//         return false;
+//     }
+
+//     lock.l_type = F_UNLCK;
+//     fcntl(courseFileDescriptor, F_SETLK, &lock);
+
+//     close(courseFileDescriptor);
+
+//     bzero(writeBuffer, sizeof(writeBuffer));
+
+//     if (course.faculty_id == loggedIn_faculty.login_id)
+//     {
+//         int tempFileDescriptor = open("./functionalities/records/temp", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+//         if (tempFileDescriptor == -1) {
+//             perror("Error while creating a temporary file!");
+//             close(courseFileDescriptor);
+//             exit(1);
+//         }
+
+//         courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+//         if (courseFileDescriptor == -1)
+//         {
+//             perror("Error opening course file!");
+//             return false;
+//         }
+
+//         int bytesRead;
+//         int courseFound = 0;
+//         while ((bytesRead = read(courseFileDescriptor, &course, sizeof(struct Course))) > 0) {
+//             if (course.course_id == courseID) {
+//                 // Found the course to delete, skip it
+//                 courseFound = 1;
+//             } else {
+//                 // Copy the course to the temporary file
+//                 if (write(tempFileDescriptor, &course, bytesRead) == -1) {
+//                     perror("Error while writing to the temporary file!");
+//                     close(courseFileDescriptor);
+//                     close(tempFileDescriptor);
+//                     exit(1);
+//                 }
+//             }
+//         }
+
+//         if (bytesRead == -1) {
+//             perror("Error while reading the course record file!");
+//             close(courseFileDescriptor);
+//             close(tempFileDescriptor);
+//             exit(1);
+//         }
+
+//         close(courseFileDescriptor);
+//         close(tempFileDescriptor);
+
+//          if (courseFound) {
+//         // Replace the original course file with the temporary file
+//         if (rename("./funcationalities/records/temp", "./funcationalities/records/course") == -1) {
+//             perror("Error while renaming the temporary file!");
+//             exit(1);
+//         }
+        
+//         strcpy(writeBuffer, "Course Deletion Successful");
+//         }
+//     }
+
+//     else{
+//         strcpy(writeBuffer, "Sorry! You can't delete this course");
+//     }
+
+//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing final DEL message to client!");
+//         return false;
+//     }
+
+//     return true;
+// }
+
+
+// bool update_course_details(int connFD)
+// {
+//     ssize_t readBytes, writeBytes;
+//     char readBuffer[1000], writeBuffer[1000];
+
+//     struct Course course;
+
+//     int courseID;
+
+//     off_t offset;
+//     int lockingStatus;
+
+//     writeBytes = write(connFD, FACULTY_UPDATE_COURSE_ID, strlen(FACULTY_UPDATE_COURSE_ID));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing FACULTY_UPDATE_COURSE_ID message to client!");
+//         return false;
+//     }
+//     bzero(readBuffer, sizeof(readBuffer));
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error while reading course ID from client!");
+//         return false;
+//     }
+
+//     courseID = atoi(readBuffer);
+
+//     int courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+//     if (courseFileDescriptor == -1)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, "Course ID doesn't exist");
+//         strcat(writeBuffer, "^");
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing course ID doesn't exist message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//         return false;
+//     }
+    
+//     offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+//     if (errno == EINVAL)
+//     {
+//         // Course record doesn't exist
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, "course ID doesn't exist");
+//         strcat(writeBuffer, "^");
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing course ID doesn't exist message to client!");
+//             return false;
+//         }
+//         return false;
+//     }
+//     else if (offset == -1)
+//     {
+//         perror("Error while seeking to required course record!");
+//         return false;
+//     }
+
+//     struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Course), getpid()};
+
+//     // Lock the record to be read
+//     lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
+//     if (lockingStatus == -1)
+//     {
+//         perror("Couldn't obtain lock on course record!");
+//         return false;
+//     }
+
+//     readBytes = read(courseFileDescriptor, &course, sizeof(struct Course));
+//     if (readBytes == -1)
+//     {
+//         perror("Error while reading course record from the file!");
+//         return false;
+//     }
+
+//     // Unlock the record
+//     lock.l_type = F_UNLCK;
+//     fcntl(courseFileDescriptor, F_SETLK, &lock);
+
+//     close(courseFileDescriptor);
+
+//     if(course.faculty_id == loggedIn_faculty.login_id){
+
+//     writeBytes = write(connFD, FACULTY_UPDATE_COURSE_MENU, strlen(FACULTY_UPDATE_COURSE_MENU));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing FACULTY_UPDATE_COURSE_MENU message to client!");
+//         return false;
+//     }
+//     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//     if (readBytes == -1)
+//     {
+//         perror("Error while getting course modification menu choice from client!");
+//         return false;
+//     }
+
+//     int choice = atoi(readBuffer);
+//     if (choice == 0)
+//     {
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, ERRON_INPUT_FOR_NUMBER);
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing ERRON_INPUT_FOR_NUMBER message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//         return false;
+//     }
+
+//     bzero(readBuffer, sizeof(readBuffer));
+//     switch (choice)
+//     {
+//     case 1:
+//         writeBytes = write(connFD, FACULTY_UPDATE_COURSE_NAME, strlen(FACULTY_UPDATE_COURSE_NAME));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing FACULTY_UPDATE_COURSE_NAME message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, &readBuffer, sizeof(readBuffer));
+//         if (readBytes == -1)
+//         {
+//             perror("Error while getting response for course new name from client!");
+//             return false;
+//         }
+//         strcpy(course.name, readBuffer);
+//         break;
+//     case 2:
+//         writeBytes = write(connFD, FACULTY_UPDATE_COURSE_DEPT, strlen(FACULTY_UPDATE_COURSE_DEPT));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing FACULTY_UPDATE_COURSE_DEPT message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, &readBuffer, sizeof(readBuffer));
+//         if (readBytes == -1)
+//         {
+//             perror("Error while getting response for course new dept from client!");
+//             return false;
+//         }
+//         strcpy(course.dept, readBuffer);
+//         break;
+//     case 3:
+//        writeBytes = write(connFD, FACULTY_UPDATE_COURSE_CREDITS, strlen(FACULTY_UPDATE_COURSE_CREDITS));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing FACULTY_UPDATE_COURSE_CREDITS message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, &readBuffer, sizeof(readBuffer));
+//         if (readBytes == -1)
+//         {
+//             perror("Error while getting response for course new credits from client!");
+//             return false;
+//         }
+//         int updatedCredits = atoi(readBuffer);
+//         if (updatedCredits == 0)
+//         {
+//             bzero(writeBuffer, sizeof(writeBuffer));
+//             strcpy(writeBuffer, ERRON_INPUT_FOR_NUMBER);
+//             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//             if (writeBytes == -1)
+//             {
+//                 perror("Error while writing ERRON_INPUT_FOR_NUMBER message to client!");
+//                 return false;
+//             }
+//             readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//             return false;
+//         }
+//         course.credits = updatedCredits;
+//         break;
+//     default:
+//         bzero(writeBuffer, sizeof(writeBuffer));
+//         strcpy(writeBuffer, "Invalid Menu Choice");
+//         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//         if (writeBytes == -1)
+//         {
+//             perror("Error while writing Invalid Menu Choice message to client!");
+//             return false;
+//         }
+//         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+//         return false;
+//     }
+
+//     courseFileDescriptor = open(COURSE_FILE, O_WRONLY);
+//     if (courseFileDescriptor == -1)
+//     {
+//         perror("Error while opening course file");
+//         return false;
+//     }
+//     offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+//     if (offset == -1)
+//     {
+//         perror("Error while seeking to required course record!");
+//         return false;
+//     }
+
+//     lock.l_type = F_WRLCK;
+//     lock.l_start = offset;
+//     lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
+//     if (lockingStatus == -1)
+//     {
+//         perror("Error while obtaining write lock on course record!");
+//         return false;
+//     }
+
+//     writeBytes = write(courseFileDescriptor, &course, sizeof(struct Course));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing update course info into file");
+//     }
+
+//     lock.l_type = F_UNLCK;
+//     fcntl(courseFileDescriptor, F_SETLKW, &lock);
+//     bzero(writeBuffer,sizeof(writeBuffer));
+//     strcpy(writeBuffer,"Updated Successfully");
+//     }
+//     else{
+//         bzero(writeBuffer,sizeof(writeBuffer));
+//         strcpy(writeBuffer,"Sorry! You can't modify this course");
+
+//     }
+
+//     close(courseFileDescriptor);
+
+//     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+//     if (writeBytes == -1)
+//     {
+//         perror("Error while writing Updated Successfully message to client!");
+//         return false;
+//     }
+
+//     return true;
+// }
+
+#endif
