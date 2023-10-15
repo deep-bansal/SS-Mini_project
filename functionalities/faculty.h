@@ -58,8 +58,8 @@ bool faculty_operation_handler(int connFD)
                 update_course_details(connFD);
                 break;
             case 5:
-                // change_pwd(connFD);
-                break;
+                writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                return false;
             default:
                 writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                 return false;

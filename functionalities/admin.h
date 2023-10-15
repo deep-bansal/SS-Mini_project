@@ -335,7 +335,7 @@ int add_faculty(int connFD)
         perror("Error writing ADMIN_ADD_FACULTY_NAME message to client!");
         return false;
     }
-
+    bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1)
     {
@@ -435,7 +435,6 @@ int add_faculty(int connFD)
 
     bzero(writeBuffer, sizeof(writeBuffer));
     sprintf(writeBuffer, "%s%d\n%s%s", ADMIN_ADD_FACULTY_AUTOGEN_LOGIN, newFaculty.login_id, ADMIN_ADD_FACULTY_AUTOGEN_PASSWORD, AUTOGEN_PASSWORD);
-    strcat(writeBuffer, "^");
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)
     {
@@ -481,7 +480,6 @@ bool modify_student_info(int connFD)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -498,7 +496,6 @@ bool modify_student_info(int connFD)
         // Student record doesn't exist
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -732,7 +729,6 @@ bool modify_faculty_info(int connFD)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "faculty ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -749,7 +745,6 @@ bool modify_faculty_info(int connFD)
         // Faculty record doesn't exist
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "faculty ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -966,7 +961,6 @@ bool activate_student(int connFD){
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -981,7 +975,6 @@ bool activate_student(int connFD){
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -1097,7 +1090,6 @@ bool block_student (int connFD){
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -1111,7 +1103,6 @@ bool block_student (int connFD){
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Student ID doesn't exist");
-        strcat(writeBuffer, "^");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {

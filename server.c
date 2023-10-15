@@ -17,7 +17,7 @@ Description : This file contain the server code
 
 #include "./functionalities/admin.h"
 #include "./functionalities/faculty.h"
-// #include "./functionalities/student.h"
+#include "./functionalities/student.h"
 
 
 int socket_descriptor;
@@ -57,8 +57,7 @@ void handle_client(int client_socket) {
                 break;
             case 3:
                 //Student
-                // student_operation_handler(client_socket);
-
+                student_operation_handler(client_socket);
                 break;
             default:
                 // Exit

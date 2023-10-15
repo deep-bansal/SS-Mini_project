@@ -209,6 +209,7 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
         }
         else if(isStudent)
         {
+            
             if (strcmp(hashedPassword, student.password) == 0)
             {
                 *ptrToStudentID = student;
@@ -239,7 +240,7 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
 bool get_student_details(int connFD, int studentID)
 {
     ssize_t readBytes, writeBytes;            
-    char readBuffer[1024], writeBuffer[1024];
+    char readBuffer[150], writeBuffer[500];
 
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
@@ -347,7 +348,7 @@ bool get_student_details(int connFD, int studentID)
         strcat(writeBuffer,appendStatus);
     }
 
-    strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
+    strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...");
 
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)
@@ -362,7 +363,7 @@ bool get_student_details(int connFD, int studentID)
 bool get_faculty_details(int connFD, int facultyID)
 {
     ssize_t readBytes, writeBytes;             
-    char readBuffer[1024], writeBuffer[1024]; 
+    char readBuffer[10], writeBuffer[500]; 
 
     struct Faculty faculty = {0};
     int facultyFileDescriptor;
@@ -442,7 +443,7 @@ bool get_faculty_details(int connFD, int facultyID)
 
     if(faculty.login_id != facultyID){
         bzero(writeBuffer,sizeof(writeBuffer));
-        strcpy(writeBuffer,"Student doesn't exist!");
+        strcpy(writeBuffer,"faculty doesn't exist!");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -455,7 +456,7 @@ bool get_faculty_details(int connFD, int facultyID)
     bzero(writeBuffer, sizeof(writeBuffer));
     sprintf(writeBuffer, "Faculty Details - \n\tID : %d\n\tName : %s\n\tDepatment : %s\n\tDesignation : %s\n\tEmail : %s\n", faculty.login_id, faculty.name, faculty.dept, faculty.desig, faculty.email);
 
-    strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
+    strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...");
 
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)

@@ -1,7 +1,3 @@
-// enroll to a course
-// drop course
-// view enrolled course details
-//change pwd
 
 #ifndef STUDENT_FUNCTIONS
 #define STUDENT_FUNCTIONS
@@ -14,23 +10,20 @@ bool view_all_courses(int connFD);
 bool enroll_to_new_course(int connFD);
 bool drop_course(int connFD);
 bool view_enrolled_course_details(int connFD);
-// bool change_pwd(int connFD);s
 
 struct Student loggedIn_student;
                 
-
 bool student_operation_handler(int connFD)
 {
 
     if (login_handler(false,true, connFD, &loggedIn_student,NULL))
     {
         ssize_t writeBytes, readBytes;
-        char readBuffer[500], writeBuffer[1000];
+        char readBuffer[500], writeBuffer[800];
         bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "Welcome");
+        strcpy(writeBuffer, "Welcome\n");
         while (1)
         {
-            strcat(writeBuffer, "\n");
             strcat(writeBuffer, STUDENT_MENU);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
             if (writeBytes == -1)
@@ -39,7 +32,7 @@ bool student_operation_handler(int connFD)
                 return false;
             }
             bzero(writeBuffer, sizeof(writeBuffer));
-
+            bzero(readBuffer, sizeof(readBuffer));
             readBytes = read(connFD, readBuffer, sizeof(readBuffer));
             if (readBytes == -1)
             {
@@ -48,6 +41,7 @@ bool student_operation_handler(int connFD)
             }
 
             int choice = atoi(readBuffer);
+            
             switch (choice)
             {
             case 1:
@@ -57,15 +51,12 @@ bool student_operation_handler(int connFD)
                 enroll_to_new_course(connFD);
                 break;
             case 3:
-                // drop_course(connFD);
+                drop_course(connFD);
                 break;
             case 4:
                 view_enrolled_course_details(connFD);
                 break;
             case 5:
-                // change_pwd(connFD);
-                break;
-            case 6:
                 writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                 return false;
             default:
@@ -76,6 +67,7 @@ bool student_operation_handler(int connFD)
     }
     else
     {
+        
         return false;
     }
     return true;
@@ -158,11 +150,11 @@ bool view_all_courses (int connFD)
     }
 
     lock.l_type = F_UNLCK;
-    fcntl(courseFileDescriptor, F_SETLK, &lock);
+    fcntl(courseFileDescriptor, F_SETLKW, &lock);
     close(courseFileDescriptor);
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    strcpy(writeBuffer, "\nYou'll now be redirected to the main menu...");
+    strcpy(writeBuffer, "\nYou'll now be redirected to the main menu...\n");
 
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1)
@@ -170,6 +162,9 @@ bool view_all_courses (int connFD)
         perror("Error writing redirect msg to client!");
         return false;
     }
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    
 
     return true;
 }
@@ -462,6 +457,10 @@ bool enroll_to_new_course(int connFD){
         perror("Error writing redirect msg to client!");
         return false;
     }
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
+    return true;
 }
 
 bool drop_course(int connFD){
@@ -695,6 +694,9 @@ bool drop_course(int connFD){
         return false;
     }
 
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
+    return true;
 }
 
 bool view_enrolled_course_details (int connFD)
@@ -795,6 +797,9 @@ bool view_enrolled_course_details (int connFD)
         perror("Error writing redirect msg to client!");
         return false;
     }
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    bzero(readBuffer, sizeof(readBuffer));
 
     return true;
 }
