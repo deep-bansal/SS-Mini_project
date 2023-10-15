@@ -66,6 +66,9 @@ bool admin_operation_handler(int connFD)
             case 8:
                 modify_faculty_info(connFD);
                 break;
+            case 9:
+                writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                return false;
             default:
                 writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                 return false;

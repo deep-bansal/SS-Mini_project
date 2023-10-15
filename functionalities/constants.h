@@ -3,7 +3,7 @@
 
 #define KEY_TO_CRYPT "666"
 
-#define ADMIN_MENU "1. Add Student\n2. Get Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Activate Student\n6. Block Student\n7. Modify Student Details\n8. Modify Faculty Details\nPress any other key to logout"
+#define ADMIN_MENU "1. Add Student\n2. Get Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Activate Student\n6. Block Student\n7. Modify Student Details\n8. Modify Faculty Details\n9.Logout"
 #define ADMIN_LOGOUT "Logging you out"
 
 //add student

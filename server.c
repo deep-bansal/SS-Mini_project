@@ -7,6 +7,7 @@ Description : This file contain the server code
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/ip.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -16,6 +17,7 @@ Description : This file contain the server code
 
 #include "./functionalities/admin.h"
 #include "./functionalities/faculty.h"
+#include "./functionalities/student.h"
 
 
 int socket_descriptor;
@@ -51,16 +53,17 @@ void handle_client(int client_socket) {
             case 2:
                 // Faculty
                 faculty_operation_handler(client_socket);
+                
                 break;
             case 3:
                 //Student
-                // student_operation_handler(client_socket);
-                write(client_socket, "Student", strlen("Student"));
+                student_operation_handler(client_socket);
+                break;
             default:
                 // Exit
                 break;
             }
-        }
+    }
 }
 
 int main() {
@@ -118,10 +121,10 @@ int main() {
             close(socket_descriptor); // Close the listening socket in the child
 
             handle_client(connection_descriptor);
-
             return 0; 
         } else {
             // This is the parent process (listening)
+            wait(0);
             close(connection_descriptor); // Close the connection descriptor in the parent
         }
     }

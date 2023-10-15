@@ -16,11 +16,10 @@ struct Faculty loggedIn_faculty;
 
 bool faculty_operation_handler(int connFD)
 {
-
     if (login_handler(false,false, connFD, NULL,&loggedIn_faculty))
     {
         ssize_t writeBytes, readBytes;
-        char readBuffer[1000], writeBuffer[1000];
+        char readBuffer[1024], writeBuffer[1024];
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Welcome");
         while (1)
@@ -41,7 +40,6 @@ bool faculty_operation_handler(int connFD)
                 perror("Error while reading client's choice for FACULTY_MENU");
                 return false;
             }
-
             int choice = atoi(readBuffer);
             switch (choice)
             {
@@ -75,12 +73,11 @@ bool faculty_operation_handler(int connFD)
 
 int add_new_course(int connFD){
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[1024], writeBuffer[1024];
 
     struct Course newCourse, previousCourse;
 
     //course_id
-
     int courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
     if (courseFileDescriptor == -1 && errno == ENOENT)
     {
@@ -117,14 +114,11 @@ int add_new_course(int connFD){
 
         lock.l_type = F_UNLCK;
         fcntl(courseFileDescriptor, F_SETLK, &lock);
-
         close(courseFileDescriptor);
-
         newCourse.course_id = previousCourse.course_id + 1;
     }
 
     //course name
-
     sprintf(writeBuffer, "%s", FACULTY_ADD_COURSE_NAME);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)
@@ -143,7 +137,6 @@ int add_new_course(int connFD){
     strcpy(newCourse.name, readBuffer);
 
     //course dept
-
     sprintf(writeBuffer, "%s", FACULTY_ADD_COURSE_DEPT);
     writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
     if (writeBytes == -1)

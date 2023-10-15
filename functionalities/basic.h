@@ -19,7 +19,6 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
 {
     ssize_t readBytes, writeBytes;            
     char readBuffer[1000], writeBuffer[1000];
-    char tempBuffer[1000];
     struct Student student;
     struct Faculty faculty;
 
@@ -68,16 +67,26 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
     }
     else if(isStudent)
     {
-        bzero(tempBuffer, sizeof(tempBuffer));
-        strcpy(tempBuffer, readBuffer);
-        write(STDOUT_FILENO,readBuffer,sizeof(readBuffer));
         ID = atoi(readBuffer);
 
         int studentFD = open(STUDENT_FILE, O_RDONLY);
         if (studentFD == -1)
         {
-            perror("Error opening student file in read mode!");
-            return false;
+            if(errno == ENOENT){
+                bzero(writeBuffer,sizeof(writeBuffer));
+                strcpy(writeBuffer,"No student is enrolled till now!");
+                writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+                if (writeBytes == -1)
+                {
+                    perror("Error while writing no student exist message to client!");
+                    return false;
+                }
+                return false;
+            }
+            else{
+                perror("Error opening student file in read mode!");
+                return false;
+            }
         }
 
         off_t offset = lseek(studentFD, ID * sizeof(struct Student), SEEK_SET);
@@ -95,17 +104,20 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
             readBytes = read(studentFD, &student, sizeof(struct Student));
             if (readBytes == -1)
             {
-                ;
                 perror("Error reading student record from file!");
+                return 0;
             }
 
             lock.l_type = F_UNLCK;
             fcntl(studentFD, F_SETLK, &lock);
 
+
+
             if (student.login_id == atoi(readBuffer))
                 userFound = true;
 
             close(studentFD);
+
         }
         else
         {
@@ -113,15 +125,26 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
         }
     }
     else{
-        bzero(tempBuffer, sizeof(tempBuffer));
-        strcpy(tempBuffer, readBuffer);
         ID = atoi(readBuffer);
 
         int facultyFD = open(FACULTY_FILE, O_RDONLY);
         if (facultyFD == -1)
         {
-            perror("Error opening faculty file in read mode!");
-            return false;
+            if(errno == ENOENT){
+                bzero(writeBuffer,sizeof(writeBuffer));
+                strcpy(writeBuffer,"No faculty is present till now!");
+                writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+                if (writeBytes == -1)
+                {
+                    perror("Error while no faculty exist message to client!");
+                    return false;
+                }
+                return false;
+            }
+            else{
+                perror("Error opening faculty file in read mode!");
+                return false;
+            }
         }
 
         off_t offset = lseek(facultyFD, ID * sizeof(struct Faculty), SEEK_SET);
@@ -139,8 +162,8 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
             readBytes = read(facultyFD, &faculty, sizeof(struct Faculty));
             if (readBytes == -1)
             {
-                ;
                 perror("Error reading faculty record from file!");
+                return false;
             }
 
             lock.l_type = F_UNLCK;
@@ -207,7 +230,6 @@ bool login_handler(bool isAdmin,bool isStudent, int connFD,struct Student *ptrTo
     }
     else
     {
-        bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD,"Inavlid login", strlen("Inavlid login"));
     }
 
@@ -249,15 +271,21 @@ bool get_student_details(int connFD, int studentID)
     studentFileDescriptor = open(STUDENT_FILE, O_RDONLY);
     if (studentFileDescriptor == -1)
     {
-        bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "Student ID doesn't exist");
-        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-        if (writeBytes == -1)
-        {
-            perror("Error while writing Student ID doesn't exist message to client!");
+        if(errno == ENOENT){
+            bzero(writeBuffer, sizeof(writeBuffer));
+            strcpy(writeBuffer, "Student ID doesn't exist");
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+            if (writeBytes == -1)
+            {
+                perror("Error while writing Student ID doesn't exist message to client!");
+                return false;
+            }
             return false;
         }
-        return false;
+        else{
+            perror("error in opening the file");
+            return false;
+        }
     }
     int offset = lseek(studentFileDescriptor, studentID * sizeof(struct Student), SEEK_SET);
     if (errno == EINVAL)
@@ -296,6 +324,18 @@ bool get_student_details(int connFD, int studentID)
     lock.l_type = F_UNLCK;
     fcntl(studentFileDescriptor, F_SETLK, &lock);
 
+    if(student.login_id != studentID){
+        bzero(writeBuffer,sizeof(writeBuffer));
+        strcpy(writeBuffer,"Student doesn't exist!");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error writing student info to client!");
+            return false;
+        }
+        return false;
+    }
+
     bzero(writeBuffer, sizeof(writeBuffer));
     sprintf(writeBuffer, "Student Details - \n\tID : %d\n\tName : %s\n\tRoll No. : %d\n\tAge: %d\n\tEmail : %s\n\tAddress : %s\n\t", student.login_id, student.name, student.login_id, student.age, student.email, student.address);
     if(student.isActive){
@@ -316,7 +356,6 @@ bool get_student_details(int connFD, int studentID)
         return false;
     }
 
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     return true;
 }
 
@@ -325,7 +364,7 @@ bool get_faculty_details(int connFD, int facultyID)
     ssize_t readBytes, writeBytes;             
     char readBuffer[1024], writeBuffer[1024]; 
 
-    struct Faculty faculty;
+    struct Faculty faculty = {0};
     int facultyFileDescriptor;
     struct flock lock = {F_RDLCK, SEEK_SET, 0, sizeof(struct Student), getpid()};
 
@@ -401,6 +440,18 @@ bool get_faculty_details(int connFD, int facultyID)
     lock.l_type = F_UNLCK;
     fcntl(facultyFileDescriptor, F_SETLK, &lock);
 
+    if(faculty.login_id != facultyID){
+        bzero(writeBuffer,sizeof(writeBuffer));
+        strcpy(writeBuffer,"Student doesn't exist!");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error writing student info to client!");
+            return false;
+        }
+        return false;
+    }
+
     bzero(writeBuffer, sizeof(writeBuffer));
     sprintf(writeBuffer, "Faculty Details - \n\tID : %d\n\tName : %s\n\tDepatment : %s\n\tDesignation : %s\n\tEmail : %s\n", faculty.login_id, faculty.name, faculty.dept, faculty.desig, faculty.email);
 
@@ -413,7 +464,6 @@ bool get_faculty_details(int connFD, int facultyID)
         return false;
     }
 
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     return true;
 }
 
