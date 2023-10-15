@@ -19,7 +19,7 @@ bool faculty_operation_handler(int connFD)
     if (login_handler(false,false, connFD, NULL,&loggedIn_faculty))
     {
         ssize_t writeBytes, readBytes;
-        char readBuffer[1024], writeBuffer[1024];
+        char readBuffer[500], writeBuffer[900];
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Welcome");
         while (1)
@@ -41,6 +41,8 @@ bool faculty_operation_handler(int connFD)
                 return false;
             }
             int choice = atoi(readBuffer);
+            bzero(readBuffer,sizeof(readBuffer));
+        
             switch (choice)
             {
             case 1:
@@ -73,7 +75,7 @@ bool faculty_operation_handler(int connFD)
 
 int add_new_course(int connFD){
     ssize_t readBytes, writeBytes;
-    char readBuffer[1024], writeBuffer[1024];
+    char readBuffer[500], writeBuffer[500];
 
     struct Course newCourse, previousCourse;
 
@@ -126,7 +128,7 @@ int add_new_course(int connFD){
         perror("Error writing FACULTY_ADD_COURSE_NAME message to client!");
         return false;
     }
-
+    bzero(readBuffer,sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1)
     {
@@ -144,7 +146,7 @@ int add_new_course(int connFD){
         perror("Error writing FACULTY_ADD_COURSE_DEPT message to client!");
         return false;
     }
-
+    bzero(readBuffer,sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1)
     {
@@ -223,7 +225,6 @@ int add_new_course(int connFD){
     //course Active status
     newCourse.isActive = true;
 
-
     courseFileDescriptor = open(COURSE_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
     if (courseFileDescriptor == -1)
     {
@@ -256,10 +257,10 @@ int add_new_course(int connFD){
 bool view_offering_courses (int connFD)
 {
     ssize_t readBytes, writeBytes;            
-    char readBuffer[10], writeBuffer[1024];
+    char readBuffer[10], writeBuffer[500];
 
     struct Course course = {0};
-    int CourseFileDescriptor;
+    int courseFileDescriptor;
     int courseID;
     struct flock lock = {F_RDLCK, SEEK_SET, 0, sizeof(struct Course), getpid()};
 
@@ -280,11 +281,11 @@ bool view_offering_courses (int connFD)
 
     courseID = atoi(readBuffer);
 
-    CourseFileDescriptor = open(COURSE_FILE, O_RDONLY);
-    if (CourseFileDescriptor == -1)
+    courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+    if (courseFileDescriptor == -1)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "Course ID doesn't exist");
+        strcpy(writeBuffer, "Course ID doesn't exist ");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -294,11 +295,11 @@ bool view_offering_courses (int connFD)
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         return false;
     }
-    int offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    int offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
     if (errno == EINVAL)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "Course ID doesn't exist");
+        strcpy(writeBuffer, "Course ID doesn't exist 2");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -315,14 +316,14 @@ bool view_offering_courses (int connFD)
     }
     lock.l_start = offset;
 
-    int lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    int lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
     if (lockingStatus == -1)
     {
         perror("Error while obtaining read lock on the course file!");
         return false;
     }
 
-    readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course));
+    readBytes = read(courseFileDescriptor, &course, sizeof(struct Course));
     if (readBytes == -1)
     {
         perror("Error reading course record from file!");
@@ -330,13 +331,13 @@ bool view_offering_courses (int connFD)
     }
 
     lock.l_type = F_UNLCK;
-    fcntl(CourseFileDescriptor, F_SETLK, &lock);
-    close(CourseFileDescriptor);
+    fcntl(courseFileDescriptor, F_SETLK, &lock);
+    close(courseFileDescriptor);
 
     if(course.faculty_id != loggedIn_faculty.login_id){
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "This course doesn't belong to you");
-        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
+        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -348,8 +349,8 @@ bool view_offering_courses (int connFD)
 
     if(course.isActive == false){
         bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "This course doesn't exist");
-        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
+        strcpy(writeBuffer, "This course doesn't exist ");
+        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -377,7 +378,7 @@ bool view_offering_courses (int connFD)
 bool remove_course (int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Course course;
 
@@ -457,7 +458,7 @@ bool remove_course (int connFD)
     if(course.isActive == false){
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "This course doesn't exist");
-        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
+        strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -520,7 +521,7 @@ bool remove_course (int connFD)
 bool update_course_details(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Course course = {0};
 

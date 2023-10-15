@@ -17,7 +17,7 @@ bool admin_operation_handler(int connFD)
     if (login_handler(true,false, connFD, NULL,NULL))
     {
         ssize_t writeBytes, readBytes;
-        char readBuffer[1000], writeBuffer[1000];
+        char readBuffer[500], writeBuffer[1000];
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Welcome");
         while (1)
@@ -85,7 +85,7 @@ bool admin_operation_handler(int connFD)
 int add_student(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Student newStudent, previousStudent;
     bzero(writeBuffer, sizeof(writeBuffer));
@@ -195,7 +195,7 @@ int add_student(int connFD)
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
 
-    char password[1000];
+    char password[500];
     strcpy(password,AUTOGEN_PASSWORD);
     strcpy(newStudent.password, password);
 
@@ -278,7 +278,7 @@ int add_student(int connFD)
 int add_faculty(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Faculty newFaculty, previousFaculty;
 
@@ -414,7 +414,7 @@ int add_faculty(int connFD)
 
     bzero(writeBuffer, sizeof(writeBuffer));
     bzero(readBuffer, sizeof(readBuffer));
-    char hashedPassword[1000];
+    char hashedPassword[500];
     strcpy(hashedPassword,AUTOGEN_PASSWORD);
     strcpy(newFaculty.password, hashedPassword);
 
@@ -451,7 +451,7 @@ int add_faculty(int connFD)
 bool modify_student_info(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Student student;
 
@@ -702,7 +702,7 @@ bool modify_student_info(int connFD)
 bool modify_faculty_info(int connFD)
 {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[500], writeBuffer[500];
 
     struct Faculty faculty;
 

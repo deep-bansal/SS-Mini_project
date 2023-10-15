@@ -17,14 +17,14 @@ Description : This file contain the server code
 
 #include "./functionalities/admin.h"
 #include "./functionalities/faculty.h"
-#include "./functionalities/student.h"
+// #include "./functionalities/student.h"
 
 
 int socket_descriptor;
 
 void handle_client(int client_socket) {
 
-    char readbuffer[1000];
+    char readbuffer[500];
     const char* str = "Welcome to Couse Registration Portal! \nIdentify Yourself?\n1. Administrator\t2. Faculty\t3. Student\nPress any other number to exit";
     int writeCount = write(client_socket, str, strlen(str));
     if (writeCount == -1) {
@@ -57,7 +57,8 @@ void handle_client(int client_socket) {
                 break;
             case 3:
                 //Student
-                student_operation_handler(client_socket);
+                // student_operation_handler(client_socket);
+
                 break;
             default:
                 // Exit
@@ -124,7 +125,6 @@ int main() {
             return 0; 
         } else {
             // This is the parent process (listening)
-            wait(0);
             close(connection_descriptor); // Close the connection descriptor in the parent
         }
     }

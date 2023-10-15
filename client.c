@@ -15,47 +15,49 @@ Description : This file contain the client code
 
 void connection_handler(int sockFD)
 {
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[800], writeBuffer[800];
     int readBytes, writeBytes;            
+
+    char tempBuffer[800];
+
     do
     {
-        bzero(readBuffer, sizeof(readBuffer));
+        bzero(readBuffer, sizeof(readBuffer)); // Empty the read buffer
+        bzero(tempBuffer, sizeof(tempBuffer));
         readBytes = read(sockFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1)
             perror("Error while reading from client socket!");
         else if (readBytes == 0)
             printf("Closing the connection to the server now!\n");
-        // else if (strchr(readBuffer, '^') != NULL)
-        // {
-        //     strncpy(tempBuffer, readBuffer, strlen(readBuffer) - 1);
-        //     printf("%s\n", tempBuffer);
-        //     writeBytes = write(sockFD, "^", strlen("^"));
-        //     if (writeBytes == -1)
-        //     {
-        //         perror("Error while writing to client socket!");
-        //         break;
-        //     }
-        // }
-        // else if (strchr(readBuffer, '$') != NULL)
-        // {
-        //     strncpy(tempBuffer, readBuffer, strlen(readBuffer) - 2);
-        //     printf("%s\n", tempBuffer);
-        //     printf("Closing the connection to the server now!\n");
-        //     break;
-        // }
+        else if (strchr(readBuffer, '^') != NULL)
+        {
+            strncpy(tempBuffer, readBuffer, strlen(readBuffer) - 1);
+            printf("%s\n", tempBuffer);
+            writeBytes = write(sockFD, "^", strlen("^"));
+            if (writeBytes == -1)
+            {
+                perror("Error while writing to client socket!");
+                break;
+            }
+        }
+        else if (strchr(readBuffer, '$') != NULL)
+        {
+            strncpy(tempBuffer, readBuffer, strlen(readBuffer) - 2);
+            printf("%s\n", tempBuffer);
+            printf("Closing the connection to the server now!\n");
+            break;
+        }
         else
         {
             bzero(writeBuffer, sizeof(writeBuffer));
 
-            // if (strchr(readBuffer, '#') != NULL)
-            //     strcpy(writeBuffer, getpass(readBuffer));
-            // else
-            // {
-            //     printf("%s\n", readBuffer);
-            //     scanf("%[^\n]%*c", writeBuffer);
-            // }
-
-            strcpy(writeBuffer,readBuffer);
+            if (strchr(readBuffer, '#') != NULL)
+                strcpy(writeBuffer, getpass(readBuffer));
+            else
+            {
+                printf("%s\n", readBuffer);
+                scanf("%[^\n]%*c", writeBuffer);
+            }
 
             writeBytes = write(sockFD, writeBuffer, strlen(writeBuffer));
             if (writeBytes == -1)

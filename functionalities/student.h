@@ -25,7 +25,7 @@ bool student_operation_handler(int connFD)
     if (login_handler(false,true, connFD, &loggedIn_student,NULL))
     {
         ssize_t writeBytes, readBytes;
-        char readBuffer[1000], writeBuffer[1000];
+        char readBuffer[500], writeBuffer[1000];
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "Welcome");
         while (1)
@@ -83,10 +83,11 @@ bool student_operation_handler(int connFD)
 
 bool view_all_courses (int connFD)
 {
-    ssize_t readBytes, writeBytes;            
-    char readBuffer[10], writeBuffer[10000];
+    ssize_t writeBytes, readBytes;            
+    char writeBuffer[1000];
 
     if(loggedIn_student.isActive == 0){
+        bzero(writeBuffer,sizeof(writeBuffer));
         strcpy(writeBuffer,"You are blocked by admin!\n Contact him to unblock\n");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
@@ -97,7 +98,7 @@ bool view_all_courses (int connFD)
         return false;
     }
     
-    int CourseFileDescriptor;
+    int courseFileDescriptor;
 
     struct flock lock;
     lock.l_type = F_RDLCK;
@@ -106,38 +107,40 @@ bool view_all_courses (int connFD)
     lock.l_whence = SEEK_SET;
     lock.l_pid = getpid();
 
-    CourseFileDescriptor = open(COURSE_FILE, O_RDONLY);
-    if (CourseFileDescriptor == -1)
+    courseFileDescriptor = open(COURSE_FILE, O_RDONLY);
+    if (courseFileDescriptor == -1)
     {
-        bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, "No course exist!");
-        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-        if (writeBytes == -1)
-        {
-            perror("Error while writing no course exist message to client!");
+        if(errno = ENOENT){
+            bzero(writeBuffer, sizeof(writeBuffer));
+            strcpy(writeBuffer, "No course exist!\n");
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+            if (writeBytes == -1)
+            {
+                perror("Error while writing no course exist message to client!");
+                return false;
+            }
             return false;
         }
-        return false;
+        else{
+            perror("Error opening student file");
+            return false;
+        }
+        
     }
     
-    int lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    int lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
     if (lockingStatus == -1)
     {
         perror("Error while obtaining read lock on the course file!");
         return false;
     }
 
-    struct Course course;
-
     while(1){
 
         struct Course course;
-        readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
-        
+        readBytes = read(courseFileDescriptor, &course, sizeof(struct Course)); 
         if(readBytes <= 0) break;
-
         if(course.isActive == false) continue;
-
         bzero(writeBuffer, sizeof(writeBuffer));
         sprintf(writeBuffer, "Course Details- \n\tCourse ID- %d\n\tName : %s\n\tDepartment : %s\n\tTotal Seats: %d\n\tCredits : %d\n\tAvailable Seats : %d\n\n", course.course_id, course.name, course.dept, course.total_seats, course.credits, course.available_seats);
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
@@ -146,7 +149,6 @@ bool view_all_courses (int connFD)
             perror("Error writing course info to client!");
             return false;
         }
-
     }
 
     if (readBytes == -1)
@@ -156,8 +158,8 @@ bool view_all_courses (int connFD)
     }
 
     lock.l_type = F_UNLCK;
-    fcntl(CourseFileDescriptor, F_SETLK, &lock);
-    close(CourseFileDescriptor);
+    fcntl(courseFileDescriptor, F_SETLK, &lock);
+    close(courseFileDescriptor);
 
     bzero(writeBuffer, sizeof(writeBuffer));
     strcpy(writeBuffer, "\nYou'll now be redirected to the main menu...");
@@ -175,7 +177,7 @@ bool view_all_courses (int connFD)
 bool enroll_to_new_course(int connFD){
 
     ssize_t readBytes, writeBytes;            
-    char readBuffer[10], writeBuffer[10000];
+    char readBuffer[10], writeBuffer[500];
 
     int courseID;
 
@@ -200,7 +202,9 @@ bool enroll_to_new_course(int connFD){
     }
 
     if(!slot_empty){
-        strcpy(writeBuffer,"You have already taken all the courses, drop some to enroll");
+        bzero(write,sizeof(writeBuffer));
+        strcpy(writeBuffer,"You have already taken all the courses, drop some to enroll\n");
+        strcat(writeBuffer,"\nRedirecting to main menu");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1)
         {
@@ -210,7 +214,7 @@ bool enroll_to_new_course(int connFD){
         return false;
     }
     
-    int CourseFileDescriptor;
+    int courseFileDescriptor;
 
     struct flock lock;
     lock.l_type = F_RDLCK;
@@ -219,8 +223,8 @@ bool enroll_to_new_course(int connFD){
     lock.l_whence = SEEK_SET;
     lock.l_pid = getpid();
 
-    CourseFileDescriptor = open(COURSE_FILE, O_RDWR);
-    if (CourseFileDescriptor == -1)
+    courseFileDescriptor = open(COURSE_FILE, O_RDWR);
+    if (courseFileDescriptor == -1)
     {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, "No course exist!");
@@ -233,7 +237,7 @@ bool enroll_to_new_course(int connFD){
         return false;
     }
     
-    int lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    int lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
     if (lockingStatus == -1)
     {
         perror("Error while obtaining read lock on the course file!");
@@ -243,7 +247,7 @@ bool enroll_to_new_course(int connFD){
     while(1){
 
         struct Course course;
-        readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+        readBytes = read(courseFileDescriptor, &course, sizeof(struct Course)); 
         
         if(readBytes <= 0) break;
         if(course.isActive == false) continue;
@@ -265,8 +269,8 @@ bool enroll_to_new_course(int connFD){
     }
 
     lock.l_type = F_UNLCK;
-    fcntl(CourseFileDescriptor, F_SETLK, &lock);
-
+    fcntl(courseFileDescriptor, F_SETLK, &lock);
+    bzero(writeBuffer,sizeof(writeBuffer));
     strcpy(writeBuffer, "\nEnter the course ID you want to enroll for..\n");
 
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
@@ -288,7 +292,7 @@ bool enroll_to_new_course(int connFD){
 
     lock.l_type = F_RDLCK;
 
-    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
     if (lockingStatus == -1)
     {
         perror("Error while obtaining read lock on the course file!");
@@ -296,7 +300,7 @@ bool enroll_to_new_course(int connFD){
     }
 
     struct Course course;
-    int offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    int offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
     if (errno == EINVAL)
     {
         // Course record doesn't exist
@@ -316,22 +320,26 @@ bool enroll_to_new_course(int connFD){
         return false;
     }
 
-    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
-    if (lockingStatus == -1)
-    {
-        perror("Couldn't obtain lock on course record!");
-        return false;
-    }
-
-
-    readBytes = read(CourseFileDescriptor, &course, sizeof(struct Course)); 
+    readBytes = read(courseFileDescriptor, &course, sizeof(struct Course)); 
     if(readBytes == -1){
         perror("Error in fetching the reqd course record");
         return false;
     }
 
     lock.l_type = F_UNLCK;
-    fcntl(CourseFileDescriptor, F_SETLK, &lock);
+    fcntl(courseFileDescriptor, F_SETLK, &lock);
+
+    if(course.course_id != courseID){
+        bzero(writeBuffer,strlen(writeBuffer));
+        strcpy(writeBuffer,"The course doesn't exist\n");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1)
+        {
+            perror("Error while writing course doesn't exist message to client!");
+            return false;
+        }
+        return false;
+    }
 
     if(course.available_seats <= 0 ){
         bzero(writeBuffer,strlen(writeBuffer));
@@ -382,7 +390,7 @@ bool enroll_to_new_course(int connFD){
         return false;
     }
 
-    lockingStatus = fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    lockingStatus = fcntl(courseFileDescriptor, F_SETLKW, &lock);
     int lockingStatus2 = fcntl(studentFileDescriptor,F_SETLKW, &lock2);
 
     if(lockingStatus2 == -1 || lockingStatus == -1){
@@ -392,14 +400,14 @@ bool enroll_to_new_course(int connFD){
 
     course.available_seats = course.available_seats - 1;
 
-    offset = lseek(CourseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
+    offset = lseek(courseFileDescriptor, courseID * sizeof(struct Course), SEEK_SET);
     if (offset == -1)
     {
         perror("Error while seeking to required course record!");
         return false;
     }
 
-    writeBytes = write(CourseFileDescriptor, &course, sizeof(struct Course));
+    writeBytes = write(courseFileDescriptor, &course, sizeof(struct Course));
     if (writeBytes == -1)
     {
         perror("Error while reducing number of course seats");
@@ -437,11 +445,11 @@ bool enroll_to_new_course(int connFD){
 
     lock.l_type = F_UNLCK;
     lock2.l_type = F_UNLCK;
-    fcntl(CourseFileDescriptor, F_SETLKW, &lock);
+    fcntl(courseFileDescriptor, F_SETLKW, &lock);
     fcntl(studentFileDescriptor, F_SETLKW, &lock2);
 
     close(studentFileDescriptor);
-    close(CourseFileDescriptor);
+    close(courseFileDescriptor);
 
     bzero(writeBuffer,sizeof(writeBuffer));
     strcpy(writeBuffer,"Enrolled Successfully");
@@ -459,7 +467,7 @@ bool enroll_to_new_course(int connFD){
 bool drop_course(int connFD){
 
     ssize_t readBytes, writeBytes;            
-    char readBuffer[10], writeBuffer[10000];
+    char readBuffer[10], writeBuffer[500];
 
     int courseID,lockingStatus;
 
@@ -692,7 +700,7 @@ bool drop_course(int connFD){
 bool view_enrolled_course_details (int connFD)
 {
     int readBytes, writeBytes;            
-    char readBuffer[10], writeBuffer[10000];
+    char readBuffer[10], writeBuffer[1000];
 
     if(loggedIn_student.isActive == 0){
         strcpy(writeBuffer,"You are blocked by admin!\n Contact him to unblock\n");
